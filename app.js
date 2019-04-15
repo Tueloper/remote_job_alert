@@ -7,6 +7,8 @@ var cookieParser = require("cookie-parser");
 var logger = require("morgan");
 var session = require("express-session");
 var flash = require("connect-flash");
+var MongoStore = require('connect-mongo')(session);
+require("dotenv").config();
 
 // The database setup
 // we should probable store the url in .env for security reasons.
@@ -48,14 +50,19 @@ app.use(
   session({
     secret: "dfgdhhahg15sdff",
     saveUninitialized: false,
-    resave: false
+    resave: true,
+    store: new MongoStore({
+    mongooseConnection: db
+})
   })
 );
+
 app.use(flash());
 
 //locals
 app.use(function(req, res, next) {
   res.locals.success = req.flash("success");
+  res.locals.emailError = req.flash("emailError");
   res.locals.errors = req.flash("errors");
   next();
 });
@@ -65,7 +72,7 @@ app.use("/", indexRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
-  next(createError(404));
+  res.render("404");
 });
 
 console.log("Server running on PORT 3000");
