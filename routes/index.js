@@ -8,6 +8,7 @@ const Validation = require("../validation/email");
 const Paystack = require("../controllers/paystack");
 var Admin = require("../models/admin");
 var JobModel = require("../models/jobs");
+const Applicant = require("../controllers/applicant");
 /* GET home page. */
 //router.get("/", Home.index);
 router.get("/", function(req, res, next) {
@@ -56,16 +57,35 @@ router.get('/managejobs', function (req, res, next) {
     });
 });
 
+//Authenticate Admin Login to Manage Appliants
+router.get('/manageapplicants', function (req, res, next) {
+  Admin.findById(req.session.adminId)
+    .exec(function (error, admin) {
+      if (error) {
+        return next(error);
+      } else {
+        if (admin === null) {
+          var err = new Error('Not authorized! Go back!');
+          err.status = 400;
+          res.redirect("/admin");
+        //  return next(err);
+        } else {
+          return next();
+        }
+      }
+    });
+});
+
 // GET Contact us page
 router.get("/contact", Home.contactUs);
 
 
 //Routes for user pages
 // GET User Login page
-router.get("/user-login", Home.userLogin);
+//router.get("/user-login", Home.userLogin);
 
 // GET User Signup page
-router.get("/user-signup", Home.userSignup);
+//router.get("/user-signup", Home.userSignup);
 
 
 
@@ -79,6 +99,7 @@ router.get("/job_details", Home.job_details);
 router.get("/jobs_json", Jobs.get_all_json);
 router.get("/jobs_json/:job_id", Jobs.get_one_json);
 router.get("/jobs_api", Jobs.fetchData);
+router.get("/jobs_api/:job_id", Jobs.fetchSingle);
 
 /* There is an Error in this route, it is crashing the server */
 //router.post('/jobs', Jobs.validate('create'), Jobs.create);
@@ -95,8 +116,17 @@ router.get("/agents", Agents.get_all_agents);
 router.post("/agents", Agents.create_agent);
 router.post("/pay", Paystack.pay);
 router.get("/invoice", Home.get_summary);
-
+//Dashboard Links
 router.get("/managejobs", Jobs.get_all);
+router.get("/manageapplicants", Applicant.get_all);
+
+//Deleting Applicant details
+router.get("/applicant/:applicant_id/delete", Applicant.cancel);
+
+//Route for Applicant details
+router.get("/applicant", Home.get_applicant);
+router.post("/applicant", Applicant.create_applicant);
+
 
 //check if email is valid, then sends welcome email and saves email to db
 router.post(
